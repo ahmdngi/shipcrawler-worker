@@ -65,6 +65,7 @@ class ShipCrawlerWorker(SirbWorker):
     def __init__(self, config: Optional[dict] = None):
         super().__init__()
         config = config or {}
+        self._config = config
         self._port_config = config.get("ports", {})
 
     # ── required: execute ───────────────────────────────────────────────
@@ -625,6 +626,42 @@ class ShipCrawlerWorker(SirbWorker):
                             type="vessel_osint", worker=self.name,
                             params={"mmsi": mmsi, "name": v.get("name", ""),
                                     "port": key},
+                            priority=0,
+                        ))
+
+        # 3. Geo-targeted area scan (lat/lon + radius)
+        geo_config = self._config.get("geo_targets", []) if hasattr(self, "_config") else []
+        if not geo_config:
+            geo_config = os.environ.get("SIRB_GEO_TARGETS", "")
+            if geo_config:
+                try:
+                    geo_config = json.loads(geo_config)
+                except Exception:
+                    geo_config = []
+        if geo_config:
+            from shipcrawler_worker.discovery import GeoScanner
+            for gt in geo_config:
+                lat = gt.get("lat")
+                lon = gt.get("lon")
+                radius_km = gt.get("radius_km", 50)
+                label = gt.get("label", f"{lat},{lon}")
+                if lat is None or lon is None:
+                    continue
+                scanner = GeoScanner(lat=lat, lon=lon, radius_km=radius_km)
+                vessels = await scanner.scan()
+                print(f"[shipcrawler] geo scan @ {label}: "
+                      f"{len(vessels)} vessel(s)")
+                for v in vessels:
+                    mmsi = v.get("mmsi", "")
+                    if mmsi:
+                        tasks.append(Task(
+                            type="vessel_osint", worker=self.name,
+                            params={"mmsi": mmsi,
+                                    "name": v.get("name", ""),
+                                    "geo": label,
+                                    "lat": v.get("lat"),
+                                    "lon": v.get("lon"),
+                                    "destination": v.get("destination", "")},
                             priority=0,
                         ))
 
