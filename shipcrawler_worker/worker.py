@@ -610,10 +610,22 @@ class ShipCrawlerWorker(SirbWorker):
                 print(f"[shipcrawler] WARN: failed to read {vessels_file}: {e}")
 
         # 2. AIS port scanning
-        if self._port_config:
+        port_config = self._port_config
+        # Also check env var (set by dashboard /run/port)
+        env_worker_cfg = os.environ.get("SIRB_WORKER_CONFIG", "")
+        if env_worker_cfg:
+            try:
+                env_cfg = json.loads(env_worker_cfg)
+                env_ports = env_cfg.get("ports", {})
+                if env_ports:
+                    port_config = {**port_config, **env_ports}
+            except Exception:
+                pass
+
+        if port_config:
             from shipcrawler_worker.discovery import PortConfig, PortScanner
-            port_cfg = PortConfig(self._port_config)
-            for key in self._port_config.keys():
+            port_cfg = PortConfig(port_config)
+            for key in port_config.keys():
                 port_def = port_cfg.get(key)
                 if not port_def:
                     continue
