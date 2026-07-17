@@ -13,6 +13,9 @@ dependencies = [
     "sirb @ git+https://github.com/ahmdngi/sirb.git",
 ]
 
+[project.entry-points.sirb_workers]
+shipcrawler_worker = "shipcrawler_worker"
+
 [project.optional-dependencies]
 test = [
     "pytest>=8",
