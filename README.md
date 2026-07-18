@@ -4,6 +4,10 @@ Vessel OSINT worker for the [Sirb](https://github.com/ahmdngi/sirb) swarm framew
 
 Runs the ShipCrawler pipeline (Equasis + AIS + Shodan/Web) against vessels, producing structured findings for the Sirb blackboard.
 
+[![License](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)]()
+[![Language](https://img.shields.io/badge/language-Python-blue?style=flat-square)]()
+[![Stars](https://img.shields.io/github/stars/ahmdngi/shipcrawler-worker?style=flat-square)](https://github.com/ahmdngi/shipcrawler-worker)
+
 ## Related Skills
 
 | Skill | Description |
